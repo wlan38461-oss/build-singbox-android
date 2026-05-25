@@ -1,0 +1,46 @@
+name: Build sing-box Android AAR
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          go install golang.org/x/mobile/cmd/gobind@latest
+          gomobile init
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26d
+
+      - name: Clone sing-box
+        run: |
+          git clone https://github.com/SagerNet/sing-box.git
+          cd sing-box
+          git checkout v1.9.0
+
+      - name: Build AAR with 16KB alignment
+        run: |
+          cd sing-box
+          gomobile bind \
+            -target=android/arm64 \
+            -androidapi 26 \
+            -ldflags="-s -w -extldflags=-Wl,-z,max-page-size=16384" \
+            -o ../libsingbox.aar \
+            ./experimental/libbox
+
+      - name: Upload AAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: libsingbox-16kb
+          path: libsingbox.aar

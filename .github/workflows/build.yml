@@ -12,11 +12,6 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Install gomobile
-        run: |
-          go install golang.org/x/mobile/cmd/gomobile@latest
-          go install golang.org/x/mobile/cmd/gobind@latest
-
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
         with:
@@ -28,11 +23,13 @@ jobs:
           cd sing-box
           git checkout v1.9.0
 
-      - name: Add gomobile dependency and build
+      - name: Install gomobile and build
         run: |
           cd sing-box
-          go get golang.org/x/mobile/cmd/gobind
-          go mod tidy
+          go get golang.org/x/mobile@latest
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          go install golang.org/x/mobile/cmd/gobind@latest
+          export PATH=$PATH:$(go env GOPATH)/bin
           export ANDROID_NDK_HOME=$ANDROID_NDK_LATEST_HOME
           gomobile init
           gomobile bind \
